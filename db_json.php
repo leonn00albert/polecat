@@ -81,6 +81,15 @@ class Database {
             return $result;
         }
     }
+    function updateById(string $id){
+        if($query === []) {
+            return $this;
+        }
+        else {
+            $result = find_by_query($this->data, ["id" => $id]);
+            return $result;
+        }
+    }
 
 
     function updateMany(array $query, array $update){
