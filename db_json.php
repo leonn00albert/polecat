@@ -59,12 +59,15 @@ class Database {
 
 
    function create(array $arr){
-        $this->data = array_merge($this->data, $arr);
+        $this->data = array_merge($this->data, array_map(function ($x){
+            return ["id" => uniqid(), ...$x];
+        },$arr));
         return $this;
         $file = fopen($this->db_path . '/' . '.json', 'w');
         if(!$file) {
             return false;
         }
+        
         $json_data = json_encode($this->data);
         fwrite($file, $json_data);
 
@@ -73,24 +76,38 @@ class Database {
     }
 
     function findById(string $id){
-        if($query === []) {
-            return $this;
+        if(!$id) {
+            return [];
         }
         else {
             $result = find_by_query($this->data, ["id" => $id]);
             return $result;
         }
     }
-    function updateById(string $id){
-        if($query === []) {
+    function updateById(string $id, $update){
+        if($id === []) {
             return $this;
         }
         else {
-            $result = find_by_query($this->data, ["id" => $id]);
-            return $result;
+            $file = fopen($this->db_path . '/' . '.json', 'w');
+            fwrite($file, json_encode(update_by_query($this->data, ["id" => $id], $update)));
+            fclose($file);
+            return $this;
         }
     }
+    function deleteById(string $id){
+        if($id === []) {
+            return $this;
+        }
 
+        else {
+                $file = fopen($this->db_path . '/' . '.json', 'w');
+                fwrite($file, json_encode(delete_by_query($this->data, ["id" => $id])));
+                fclose($file);
+                return True;
+            }
+  
+    }
 
     function updateMany(array $query, array $update){
         if($query === []) {
@@ -113,3 +130,7 @@ $test = new Database("test");
 $test->create([['first_name' => 'leon  ', 'last_name' => 'russel', 'email' => 'bob.johnson@example.com']])
 ->updateMany(['first_name' => 'leon  '], ['first_name' => 'fritz  ']);
 
+
+print_r($test->updateById("6451574a39512",['first_name' => 'jack']));
+
+$test->deleteById("6451588345088");
