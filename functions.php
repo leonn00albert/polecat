@@ -53,7 +53,7 @@ function update_by_query(array $data, array $query, array $update):array | stdCl
 
 function open_file_decode_json(string $file_path): array | stdClass | null {
     $data = file_get_contents($file_path);
-    print($file_path);
+
     if ($data === false) {
   
     }

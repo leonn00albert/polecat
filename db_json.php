@@ -5,32 +5,41 @@ require_once('functions.php');
 class Database {
    public string $db_name = "";
    public string $db_path = "";
+   public $data = [];
+
    function __construct(string $name) {
         $this->db_name = $name;
         if (!is_dir($name)) {
             mkdir($name);
-            $this->db_path = "./" . $name;
-    
         }    
+        $this->db_path = "./" . $name;
+        if (is_file($name . '/' . '.json')) {
+            $this->data = open_file_decode_json($this->db_name . '/' . '.json');
+         
+        }
    }
 
-   function find(array $query):array | stdClass {
-        $data = open_file_decode_json($this->db_path . '/' . '.json');
+   private function update(){
+        $this->data = open_file_decode_json($this->db_name . '/' . '.json');
+        return $this;
+   }
+
+   function find(array $query){
         if($query === []) {
-            return $data;
+            return $this;
         }
         else {
-            $result = find_by_query($data, $query);
-            return  $result;
+            $result = find_by_query($this->data, $query);
+            return $this;
         }
    }
+   
    function findOne(array $query):stdClass{
-    $data = open_file_decode_json($this->db_path . '/' . '.json');
     if($query === []) {
         return [];
     }
     else {
-        $result = find_by_query($data, $query);
+        $result = find_by_query($this->data, $query);
         return  $result[0];
     }
 }
@@ -49,34 +58,40 @@ class Database {
      }
 
 
-   function create(array $arr):bool{
+   function create(array $arr){
+        $this->data = array_merge($this->data, $arr);
+        return $this;
         $file = fopen($this->db_path . '/' . '.json', 'w');
-        if($file == False) {
-            return False;
+        if(!$file) {
+            return false;
         }
-        $data = open_file_decode_json($this->db_path . '/' . '.json');
+        $json_data = json_encode($this->data);
+        fwrite($file, $json_data);
 
-        foreach ($arr as $elm) {
-            array_push((array) $data, $elm);
-        
-        }
-        print_r($data);
-        fwrite($file, json_encode($data));
         fclose($file);
-        return True;
+        return $this;
     }
 
-    function updateMany(array $query, array $update):bool{
-        $data = (array) open_file_decode_json($this->db_path . '/' . '.json');
+    function findById(string $id){
         if($query === []) {
-            return False;
+            return $this;
         }
         else {
-        
+            $result = find_by_query($this->data, ["id" => $id]);
+            return $result;
+        }
+    }
+
+
+    function updateMany(array $query, array $update){
+        if($query === []) {
+            return $this;
+        }
+        else {
             $file = fopen($this->db_path . '/' . '.json', 'w');
-            fwrite($file, json_encode(update_by_query($data, $query, $update)));
+            fwrite($file, json_encode(update_by_query($this->data, $query, $update)));
             fclose($file);
-            return True;
+            return $this;
         }
     }
 
@@ -85,10 +100,7 @@ class Database {
 
 $test = new Database("test");
 
-$test->create([
-    ['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john.doe@example.com'],
-    ['first_name' => 'Jane', 'last_name' => 'Smith', 'email' => 'jane.smith@example.com'],
-    ['first_name' => 'John', 'last_name' => 'Johnson', 'email' => 'bob.johnson@example.com']
-]);
 
+$test->create([['first_name' => 'leon  ', 'last_name' => 'russel', 'email' => 'bob.johnson@example.com']])
+->updateMany(['first_name' => 'leon  '], ['first_name' => 'fritz  ']);
 
